@@ -19,16 +19,7 @@ print(closePrice_df.info())
 print(limitPrice_df.info())
 print(market_df.info())
 
-# === EDA USING PRE-LOADED DATAFRAMES ===
-# Assumes you already have these in memory:
-# transaction_df, customer_df, asset_df, closePrice_df, limitPrice_df, market_df
-# Saves all tables/plots to ./results
-
-
-
 RESULTS = Path("/home/ubuntu/Capstone/results")
-# #RESULTS.mkdir(parents=True, exist_ok=True)
-
 
 def save_table(df: pd.DataFrame, name: str):
     df.to_csv(RESULTS / f"{name}.csv", index=False)
@@ -56,7 +47,7 @@ asset_enriched = asset_df.merge(market_df[["marketID", "country"]], on="marketID
 prices_enriched = closePrice_df.merge(asset_enriched[["ISIN","assetCategory","country"]], on="ISIN", how="left")
 tx_enriched = transaction_df.merge(asset_enriched[["ISIN","assetCategory","country"]], on="ISIN", how="left")
 
-# -------------------------- 1) Average close price over time (all assets) --------------------------
+# --------------------------Average close price over time (all assets) --------------------------
 avg_close = (
     closePrice_df.groupby("date", as_index=False)["closePrice"]
                  .mean()
@@ -70,7 +61,7 @@ plt.xlabel("Date"); plt.ylabel("Average close price (€)")
 plt.title("Average close price over time (all assets)")
 save_fig("avg_close_price_over_time")
 
-# -------------------------- 2) Asset classification (type & country) --------------------------
+# --------------------------Asset classification (type & country) --------------------------
 assets_by_type = (asset_enriched["assetCategory"]
                   .value_counts(dropna=False)
                   .rename_axis("assetCategory")
@@ -95,7 +86,7 @@ plt.xlabel("Country"); plt.ylabel("Assets"); plt.title("Assets by market country
 plt.xticks(rotation=30, ha="right")
 save_fig("asset_counts_by_country")
 
-# -------------------------- 3) Whole-period per-asset return --------------------------
+# --------------------------Whole-period per-asset return --------------------------
 # last/first close per ISIN across the available period
 g = closePrice_df.sort_values(["ISIN","date"]).groupby("ISIN")["closePrice"]
 first = g.first(); last = g.last()
@@ -120,7 +111,7 @@ asset_period_returns["period_return"].plot(kind="hist", bins=60)
 plt.xlabel("Whole-period return"); plt.ylabel("Assets"); plt.title("Distribution of whole-period returns")
 save_fig("whole_period_return_hist")
 
-# -------------------------- 4) Daily returns & volatility --------------------------
+# -------------------------- Daily returns & volatility --------------------------
 prices_enriched = prices_enriched.sort_values(["ISIN","date"]).copy()
 prices_enriched["closePrice"] = pd.to_numeric(prices_enriched["closePrice"], errors="coerce")
 
@@ -153,30 +144,23 @@ cs_std = (
     prices_enriched.dropna(subset=["log_ret"])
     .groupby(["assetCategory", "date"])["log_ret"]
     .std()
-)  # Series indexed by (assetCategory, date)
+)
 
 # 2) Make each category a column; index is date
 wide = cs_std.unstack("assetCategory")  # rows: date, cols: assetCategory
-
-# (optional) sort by date to be safe
 wide = wide.sort_index()
 
 # 3) Rolling 30-observation median per column (category)
-# If your dates are daily but may skip holidays, this is still fine:
 wide_roll = wide.rolling(window=30, min_periods=10).median()
-
-# If you prefer true "calendar 30-day" window, use time-based rolling instead:
-# wide_roll = wide.rolling(window="30D", min_periods=10).median()
 
 # 4) Back to long form
 cs_vol = (
     wide_roll
-    .stack(dropna=False)               # MultiIndex (date, assetCategory)
+    .stack(dropna=False)
     .rename("roll30_cs_vol")
-    .reset_index()                     # columns: ['date','assetCategory','roll30_cs_vol']
+    .reset_index()
 )
 
-# Save + plot
 cs_vol.to_csv(RESULTS/"rolling30_volatility_by_category.csv", index=False)
 
 import matplotlib.pyplot as plt

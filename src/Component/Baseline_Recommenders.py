@@ -127,7 +127,7 @@ def recommend_itemitem(u, K=20):
     ranked = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     return [j for j, _ in ranked[:K]]
 
-# Evaluate on the same users
+# Evaluate on the same users that are present in the train set
 hits2 = []
 recalls2 = []
 for u in eval_users:
