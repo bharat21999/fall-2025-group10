@@ -140,7 +140,7 @@ for u in eval_users:
     recalls2.append(hit_count / len(gt))
 
 summary2 = pd.DataFrame({
-    "metric": ["users_evaluated", "hitrate@10", "recall@10"],
+    "metric": ["users_evaluated", "hitrate@20", "recall@20"],
     "value": [len(eval_users), round(float(np.mean(hits2)), 4), round(float(np.mean(recalls2)), 4)]
 })
 
