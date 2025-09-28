@@ -107,7 +107,9 @@ kpis = pd.DataFrame({
 save_table(kpis, "whole_period_return_kpis")
 
 plt.figure(figsize=(7,4))
+lo, hi = asset_period_returns["period_return"].quantile([0.01, 0.99])
 asset_period_returns["period_return"].plot(kind="hist", bins=60)
+plt.xlim(lo, hi)
 plt.xlabel("Whole-period return"); plt.ylabel("Assets"); plt.title("Distribution of whole-period returns")
 save_fig("whole_period_return_hist")
 
