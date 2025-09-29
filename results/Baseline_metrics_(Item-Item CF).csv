@@ -1,4 +1,4 @@
 metric,value
 users_evaluated,5242.0
-hitrate@10,0.2972
-recall@10,0.1353
+hitrate@20,0.3789
+recall@20,0.1914
