@@ -1,0 +1,6 @@
+metric,value
+rounds,126500.0
+unique_timestamps,253.0
+unique_customers,500.0
+avg_regret,0.11060220613368796
+total_cumulative_regret,13991.179075911527
