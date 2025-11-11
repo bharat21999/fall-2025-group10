@@ -11,7 +11,7 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 HORIZON_DAYS = 7
 SNAP_WEEKDAY = 0   # Monday
-N_CUSTOMERS  = 3000
+N_CUSTOMERS  = 500
 RANDOM_STATE = 42
 
 # ---------- IO ----------
@@ -341,8 +341,8 @@ def build_cmab_dataset_minimal() -> Path:
         transactions,
         assets,
         min_coverage=1.0,
-        min_txn_count=50,
-        min_customers=20,
+        min_txn_count=None,
+        min_customers=None,
         ensure_diversity=False
     )
 
