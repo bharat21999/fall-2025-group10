@@ -11,7 +11,7 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 HORIZON_DAYS = 7
 SNAP_WEEKDAY = 0   # Monday
-N_CUSTOMERS  = 500
+N_CUSTOMERS  = 1000
 RANDOM_STATE = 42
 
 # ---------- IO ----------
