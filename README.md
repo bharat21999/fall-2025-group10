@@ -36,28 +36,6 @@ Comparison.py # Compares results from all recommenders and saves analysis
 data/ # (optional) raw/processed datasets
 results/ # EDA outputs, baseline results, MAB results, comparisons
 README.md
-Dependencies (example)
-
-Python 3.8+
-pandas
-numpy
-scikit-learn
-scipy
-matplotlib
-seaborn
-joblib
-tqdm
-Install
-
-Create and activate virtual environment:
-
-python -m venv .venv
-source .venv/bin/activate # macOS / Linux
-.venv\Scripts\activate # Windows
-Install dependencies:
-
-pip install -r requirements.txt (If you don't have requirements.txt yet, create one: pip freeze > requirements.txt)
-Quick start — run order and commands Run the scripts in this order (paths assume repo root):
 
 Prepare the dataset python src/component/data.py
 
@@ -91,7 +69,7 @@ Comparison.py: Aggregate and compare outputs from recommenders and save final an
 Outputs & where to find them
 
 
-Evaluation metrics (examples)
+Evaluation metrics 
 
 Regret (for bandits)
 
