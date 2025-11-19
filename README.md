@@ -1,4 +1,4 @@
-# Fall 2025 — Group 10: Multi-Armed Bandits for Recommendation
+# Fall 2025 — Group 10
 
 ## Short Description
 This project compares baseline recommenders (Random and item–item collaborative filtering) with multi-armed bandit approaches (contextual LinUCB and non-contextual UCB1). The pipeline prepares data, performs EDA, runs baselines, constructs a dataset for MAB experiments, runs multiple recommenders on that dataset, and saves comparative results.
