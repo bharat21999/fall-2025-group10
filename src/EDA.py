@@ -25,7 +25,7 @@ print(closePrice_df.info())
 print(limitPrice_df.info())
 print(market_df.info())
 
-RESULTS = Path("/home/ubuntu/Capstone/results")
+#RESULTS = Path("/home/ubuntu/Capstone/results")
 
 def save_table(df: pd.DataFrame, name: str):
     df.to_csv(RESULTS / f"{name}.csv", index=False)
