@@ -108,10 +108,10 @@ Lower regret = better sequential decision-making.
 - HitRate@k (for CF baselines) #generated only if you run Baseline_Recommenders.py
 
 ## Notes
-- Ensure file paths are correct before running.
 - Always run src/main.py first then EDA.py for EDA and Comparison.py for comparison
 - FAR-Trans is large; adequate RAM recommended.
 - Risk-level scenario is optional and requires running add_risklevel_to_cmab.py.
+- Rough implemetation of CMAB is done in the contextual_bandit_linucb_demo.ipynb for understanding the concept 
 
 ## License
 This project is licensed under the MIT License.
