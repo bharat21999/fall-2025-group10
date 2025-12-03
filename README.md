@@ -1,109 +1,123 @@
-# Fall 2025 — Group 10
+# Financial Asset Recommendation Using Multi-Armed Bandits  
+Capstone Project – Fall 2025  
+Author: Bharat Khandelwal  
+The George Washington University – Data Science Program
 
-## Short Description
-This project compares baseline recommenders (Random and item–item collaborative filtering) with multi-armed bandit approaches (contextual LinUCB and non-contextual UCB1). The pipeline prepares data, performs EDA, runs baselines, constructs a dataset for MAB experiments, runs multiple recommenders on that dataset, and saves comparative results.
+## Adaptive Financial Asset Recommendation Through Contextual and Non-Contextual Multi-Armed Bandits
 
----
+## Abstract
+Financial markets are dynamic and uncertain, making asset recommendation a challenging problem that requires adaptive decision-making. Traditional recommender systems such as Collaborative Filtering (CF) struggle in non-stationary financial environments because they depend heavily on user–item interactions.
 
-## Table of Contents
+This project evaluates Multi-Armed Bandit (MAB) approaches for financial asset recommendation using the FAR-Trans dataset (Sanz-Cruzado et al., 2024). We compare Random, Collaborative Filtering, UCB1, and LinUCB algorithms by constructing a structured, weekly snapshot–based dataset suitable for contextual and non-contextual bandit experiments.
 
-- Project overview
-- Repository structure
-- Dependencies
-- Quick start / run order
-- Script descriptions
-- Outputs & results
-- Evaluation metrics
-- Notes & tips
-- License & contact
+Experiments assess regret minimization, reward patterns, and model behavior across different asset subsets. Results show that contextual bandits (LinUCB) perform more consistently when features correlate with observed rewards, while CF baselines struggle with market shifts. Overall, the study demonstrates the potential of bandit-based frameworks for adaptive financial recommendation systems.
 
----
+## Dataset
+The project uses the FAR-Trans dataset, containing anonymized retail investor behavior, asset histories, and transaction records.
 
-## Project Overview
+### Dataset Highlights
+- ~800+ unique assets
+- ~29,000 unique customers
+- 388k unique transactions
+- 253 weekly time steps (Mondays)
+- Price data, returns, momentum, volatility
+- Customer-level risk (optional scenario)
 
-### Pipeline:
-1. Prepare raw data.  
-2. Run exploratory data analysis (EDA).  
-3. Run baseline recommenders to compare popularity-based vs item–item CF.  
-4. Prepare an MAB-compatible dataset.  
-5. Run contextual MAB (LinUCB) and non-contextual MAB (UCB1), Random, and CF recommenders on the constructed dataset.  
-6. Produce a comparative analysis and save outputs under `results/`.
+### Preprocessing Includes
+- Asset filtering
+- Price merging and feature engineering
+- 7-day momentum & 7-day volatility
+- Weekly snapshot generation for CMAB
+- Optional risk-level enrichment
 
----
+The final output is a CMAB-ready dataset used to train and test all algorithms.
 
-## Repository Structure (relevant)
+## Models Implemented
 
-src/
-  component/
-    data.py                   # Data ingestion / preprocessing (run first)
-    EDA.py                    # Exploratory data analysis (run second)
-    baseline_popularity.py    # Popularity-based baseline
-    baseline_item_item_cf.py  # Item–item collaborative filtering baseline
-    main.py                   # Prepares dataset for MAB experiments + runs LinUCB
-    mab_recommender.py        # UCB1 on the dataset created by main.py
-    random_recommender.py     # Random policy on the MAB dataset
-    CF_recommender.py         # CF-based recommender on the MAB dataset
-    Comparison.py             # Compares all recommenders and saves analysis
+### 1. Multi-Armed Bandits
+- UCB1 (Non-contextual)
+- LinUCB (Contextual)
+- LinUCB + Risk Level (Optional customer risklevel feature)
 
-                         
-results/                      # EDA outputs, baseline results, MAB results, comparisons
-README.md
+### 2. Classical Recommenders
+- Random Policy
+- Item-Item Collaborative Filtering
+- Popularity-based baseline (HitRate@k)
 
+Evaluation is based on regret, reward trends, and stability.
 
+## Installation
 
-Aggregates and compares outputs from LinUCB, UCB1, Random, and CF.  
-Writes summaries, metrics, and plots into `results/`.
+### 1. Clone the Repository
+git clone https://github.com/bharat21999/fall-2025-group10.git
 
----
+### 2. Install Dependencies
+pip install -r requirements.txt
 
-## Script Descriptions
-
-- **data.py**: Loads raw data and exports processed dataset for EDA and recommenders.  
-- **EDA.py**: Generates summary statistics, plots, and tables describing dataset characteristics.  
-- **baseline_recommenders.py**: Popularity-based recommender vs item-item CF comparison using HitRate@k.  
-- **main.py**: Creates the MAB-compatible dataset (sessionized), runs LinUCB, and shows outputs.  
-- **mab_recommender.py**: Implements non-contextual UCB1 on the dataset produced by main.py.  
-- **random_recommender.py**: Baseline random policy on the MAB dataset.  
-- **CF_recommender.py**: Collaborative filtering recommender tested on the MAB dataset.  
-- **Comparison.py**: Aggregates and compares outputs from recommenders and saves final analysis.
-
----
-
-## Outputs & Where to Find Them
-
-All results are stored in:
+## Usage
+### Prepare Raw Dataset, CMAB Dataset & Run LinUCB and other algorithms
+python src/main.py (USE_RISKLEVEL=true python main.py #when want to add customer risklevel as a feature)
 
 
 
-This includes:
+### Run Exploratory Data Analysis (EDA)
+python src/EDA.py
 
-- Cleaned datasets  
-- EDA outputs  
-- Baseline recommender performance  
-- MAB dataset and bandit runs  
-- Regret curves  
-- Comparison plots and metrics  
 
----
+### Compare All Models
+python src/Comparison.py (#as you run this it will ask for y/n if you put USE_RISKLEVEL=true in main then put y else n)
+
+All results will appear in the results/ folder.
+
+## Files Overview
+
+### src/Component/
+Reusable modules for bandit experiments:
+- Data.py – Data ingestion & preprocessing
+- environment.py – Bandit environment construction
+- model.py – Core LinUCB logic
+- mab_recommender.py – UCB1 implementation
+- CF_Recommender.py – Item-item CF
+- random_recommender.py – Random baseline
+- add_risklevel_to_cmab.py – Risk-level augmentation
+- utils.py – Shared utilities
+
+### src/
+Main execution scripts:
+- main.py – Builds CMAB dataset & runs LinUCB and other algorithms
+- EDA.py – Exploratory data analysis
+- Comparison.py – Aggregates outputs & generates comparisons
+
+### results/
+Contains:
+- EDA outputs
+- Baseline results
+- Bandit logs & regret curves
+- Final comparison metrics & plots
 
 ## Evaluation Metrics
 
-### Regret (for bandits)
+### Regret (Primary Bandit Metric)
+Regret measures how much reward is lost by not choosing the optimal arm at every step.
 
-Regret measures the loss incurred by not choosing the optimal arm.
+R(T) = Σ (r*τ – rτ)
+
+Where:
+- r*τ = reward of optimal arm
+- rτ = reward of chosen arm
+
+Lower regret = better sequential decision-making.
+
+### Additional Metrics
+- HitRate@k (for CF baselines) #generated only if you run Baseline_Recommenders.py
+
+## Notes
+- Ensure file paths are correct before running.
+- Always run src/main.py first then EDA.py for EDA and Comparison.py for comparison
+- FAR-Trans is large; adequate RAM recommended.
+- Risk-level scenario is optional and requires running add_risklevel_to_cmab.py.
+
+## License
+This project is licensed under the MIT License.
 
 
-Where:  
-- r*_τ = reward of the optimal arm at time τ  
-- r_τ = reward of the chosen arm  
-
-Lower regret indicates better performance.
-
----
-
-## Notes & Tips
-
-- Ensure correct file paths for all scripts.  
-- Run `main.py` before running UCB1, Random, or CF scripts.  
-- The FAR-Trans dataset is large; ensure sufficient memory.  
-- Use `Comparison.py` for full evaluation across all models.
