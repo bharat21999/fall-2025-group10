@@ -1,11 +1,14 @@
-
 import zipfile
 from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
 
 PAGE_URL = "https://researchdata.gla.ac.uk/1658/"
-OUT_DIR = Path("data")
+# Store raw FAR-Trans data under src/Component/data/
+BASE_DIR = Path(__file__).resolve().parent
+OUT_DIR = BASE_DIR / "data"
+OUT_DIR.mkdir(parents=True, exist_ok=True)
+
 ZIP_PATH = OUT_DIR / "dataset.zip"
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 

@@ -10,19 +10,18 @@ from tqdm.auto import tqdm
 # =========================
 # Config
 # =========================
-DATA_PATH = Path(os.getenv(
-    "CMAB_DATA_PATH",
-    "/home/ubuntu/Capstone/src/Component/data/cmab/cmab_events_min.parquet"
-))
-TRANSACTIONS_PATH = Path(os.getenv(
-    "TRANSACTIONS_PATH",
-    "/home/ubuntu/Capstone/src/Component/data/FAR-Trans/transactions.csv"
-))
-OUT_DIR = Path(os.getenv(
-    "CMAB_OUT_DIR",
-    "/home/ubuntu/Capstone/results"
-))
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+DEFAULT_CMAB_PATH = PROJECT_ROOT / "src" / "Component" / "data" / "cmab" / "cmab_events_min.parquet"
+DEFAULT_TX_PATH   = PROJECT_ROOT / "src" / "Component" / "data" / "FAR-Trans" / "transactions.csv"
+DEFAULT_OUT_DIR   = PROJECT_ROOT / "results"
+
+DATA_PATH = Path(os.getenv("CMAB_DATA_PATH", DEFAULT_CMAB_PATH))
+TRANSACTIONS_PATH = Path(os.getenv("TRANSACTIONS_PATH", DEFAULT_TX_PATH))
+OUT_DIR   = Path(os.getenv("CMAB_OUT_DIR", DEFAULT_OUT_DIR))
 OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+
 
 RANDOM_STATE = 42
 MAX_ITEMS_PER_USER = 400

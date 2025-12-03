@@ -8,15 +8,17 @@ from tqdm.auto import tqdm
 # =========================
 # Config
 # =========================
-DATA_PATH = Path(os.getenv(
-    "CMAB_DATA_PATH",
-    "/home/ubuntu/Capstone/src/Component/data/cmab/cmab_events_min.parquet"
-))
-OUT_DIR = Path(os.getenv(
-    "CMAB_OUT_DIR",
-    "/home/ubuntu/Capstone/results"
-))
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+DEFAULT_DATA_PATH = PROJECT_ROOT / "src" / "Component" / "data" / "cmab" / "cmab_events_min.parquet"
+DEFAULT_OUT_DIR   = PROJECT_ROOT / "results"
+
+DATA_PATH = Path(os.getenv("CMAB_DATA_PATH", DEFAULT_DATA_PATH))
+OUT_DIR   = Path(os.getenv("CMAB_OUT_DIR", DEFAULT_OUT_DIR))
 OUT_DIR.mkdir(parents=True, exist_ok=True)
+
 
 RANDOM_STATE = 42
 

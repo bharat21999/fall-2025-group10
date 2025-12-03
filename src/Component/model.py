@@ -9,14 +9,22 @@ from tqdm.auto import tqdm
 # =========================
 # Config (override via env)
 # =========================
-DATA_PATH = Path(os.getenv(
-    "CMAB_DATA_PATH",
-    "/home/ubuntu/Capstone/src/Component/data/cmab/cmab_events_min.parquet"
-))
-OUT_DIR = Path(os.getenv(
-    "CMAB_OUT_DIR",
-    "/home/ubuntu/Capstone/results"
-))
+# DATA_PATH = Path(os.getenv(
+#     "CMAB_DATA_PATH",
+#     "/home/ubuntu/Capstone/src/Component/data/cmab/cmab_events_min.parquet"
+# ))
+# OUT_DIR = Path(os.getenv(
+#     "CMAB_OUT_DIR",
+#     "/home/ubuntu/Capstone/results"
+# ))
+# OUT_DIR.mkdir(parents=True, exist_ok=True)
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+DEFAULT_DATA_PATH = PROJECT_ROOT / "src" / "Component" / "data" / "cmab" / "cmab_events_min.parquet"
+DEFAULT_OUT_DIR   = PROJECT_ROOT / "results"
+
+DATA_PATH = Path(os.getenv("CMAB_DATA_PATH", DEFAULT_DATA_PATH))
+OUT_DIR   = Path(os.getenv("CMAB_OUT_DIR", DEFAULT_OUT_DIR))
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # LinUCB knobs
@@ -159,17 +167,40 @@ class LinUCB:
 # =========================
 # Simulation (LinUCB Loop)
 # =========================
-def run_linucb(cmab: pd.DataFrame):
+def run_linucb(cmab: pd.DataFrame, use_risklevel: bool = False):
     """
-    FIXED: Update model only AFTER all customers at a timestamp have been processed
+    LinUCB simulation.
+    If use_risklevel=True, append customer riskLevel_code as an extra
+    context feature dimension to the per-arm feature vector.
     """
     rng = np.random.default_rng(RANDOM_STATE)
 
+    # --- Optional: build customer -> riskLevel_code map ---
+    risk_map = None
+    if use_risklevel:
+        if "riskLevel_code" not in cmab.columns:
+            raise ValueError("use_risklevel=True but 'riskLevel_code' column is missing from CMAB dataset.")
+        risk_ser = (
+            cmab[["customerID", "riskLevel_code"]]
+            .dropna()
+            .drop_duplicates("customerID")
+        )
+        risk_map = dict(
+            zip(
+                risk_ser["customerID"].astype(str),
+                risk_ser["riskLevel_code"].astype(float),
+            )
+        )
+        print(f"[LinUCB] Using riskLevel_code as context feature "
+              f"for {len(risk_map)} customers.")
+
+    # --- Build base feature lookup (asset-side features) ---
     feat_df, x_map, feature_names = build_feature_lookup(cmab)
-    #breakpoint
-    d = len(feature_names)
+    d_base = len(feature_names)
+    d = d_base + (1 if use_risklevel else 0)  # +1 for risk dim if enabled
     policy = LinUCB(d=d, alpha=ALPHA)
 
+    # --- Precompute oracle & arms per timestamp ---
     oracle_per_t = (
         cmab[["timestamp", "ISIN", "reward"]]
         .drop_duplicates(["timestamp", "ISIN"])
@@ -204,7 +235,8 @@ def run_linucb(cmab: pd.DataFrame):
     )
 
     history = []
-    pbar = tqdm(loop_df.itertuples(index=False), total=len(loop_df), desc="Snapshots", unit="ts")
+    pbar = tqdm(loop_df.itertuples(index=False), total=len(loop_df),
+                desc="Snapshots", unit="ts")
 
     for row in pbar:
         t = pd.Timestamp(row.timestamp)
@@ -217,6 +249,7 @@ def run_linucb(cmab: pd.DataFrame):
         if MAX_CUSTOMERS_PER_SNAPSHOT is not None and len(customers) > MAX_CUSTOMERS_PER_SNAPSHOT:
             customers = list(rng.choice(customers, size=MAX_CUSTOMERS_PER_SNAPSHOT, replace=False))
 
+        # Build base feature vectors per arm (asset-side)
         X_by_arm = {}
         missing = []
         for a in arms:
@@ -227,46 +260,69 @@ def run_linucb(cmab: pd.DataFrame):
                 X_by_arm[a] = x
 
         arms = [a for a in arms if a in X_by_arm]
-
         if not arms:
             continue
 
-        sub = (cmab.loc[(cmab["timestamp"] == t) & (cmab["ISIN"].isin(arms)),
-        ["ISIN", "reward"]]
-               .drop_duplicates())
+        sub = (
+            cmab.loc[(cmab["timestamp"] == t) & (cmab["ISIN"].isin(arms)),
+                     ["ISIN", "reward"]]
+            .drop_duplicates()
+        )
         rew_map = dict(zip(sub["ISIN"].astype(str), sub["reward"]))
 
-        # CRITICAL FIX: Store updates to apply AFTER all customers processed
+        # Batch updates per timestamp
         updates_batch = []
 
         for c in customers:
-            # Score all arms -> pick best
+            # Get risk feature for this customer (if enabled)
+            if use_risklevel:
+                risk_val = risk_map.get(c, None)
+                if risk_val is None:
+                    # Fallback: treat as Not_Available (e.g., 4.0) or 0.0
+                    risk_val = 4.0
+            else:
+                risk_val = None
+
             best_arm, best_score = None, -1e18
+
             for a in arms:
-                s = policy.score(a, X_by_arm[a])
+                base_x = X_by_arm[a]
+
+                # Build full context vector
+                if use_risklevel:
+                    x_vec = np.concatenate(
+                        [base_x, np.array([risk_val], dtype=np.float64)]
+                    )
+                else:
+                    x_vec = base_x
+
+                s = policy.score(a, x_vec)
                 if s > best_score:
                     best_score, best_arm = s, a
+                    best_x_vec = x_vec  # track the x used for the best arm
 
             chosen_reward = float(rew_map[best_arm])
             oracle = float(row.oracle_return)
             regret = oracle - chosen_reward
 
-            # STORE update for later (don't update immediately)
-            updates_batch.append((best_arm, X_by_arm[best_arm], chosen_reward))
-
+            updates_batch.append((best_arm, best_x_vec, chosen_reward))
             history.append((t, c, best_arm, chosen_reward, oracle, regret))
 
-        # APPLY ALL UPDATES AFTER processing all customers at this timestamp
-        for arm, x, reward in updates_batch:
-            policy.update(arm, x, reward)
+        # Apply updates AFTER all customers at timestamp t
+        for arm, x_vec, reward in updates_batch:
+            policy.update(arm, x_vec, reward)
 
         if history:
             cum_reg = sum(h[-1] for h in history)
             pbar.set_postfix(cum_regret=f"{cum_reg:.3f}")
 
-    hist_df = pd.DataFrame(history, columns=[
-        "timestamp", "customerID", "chosen_ISIN", "chosen_reward", "oracle_return", "regret"
-    ]).sort_values(["timestamp", "customerID"]).reset_index(drop=True)
+    hist_df = pd.DataFrame(
+        history,
+        columns=[
+            "timestamp", "customerID", "chosen_ISIN",
+            "chosen_reward", "oracle_return", "regret"
+        ]
+    ).sort_values(["timestamp", "customerID"]).reset_index(drop=True)
 
     hist_df["cum_regret"] = hist_df["regret"].cumsum()
 
@@ -276,9 +332,16 @@ def run_linucb(cmab: pd.DataFrame):
         "unique_customers": hist_df["customerID"].nunique(),
         "avg_regret": float(hist_df["regret"].mean()) if len(hist_df) else np.nan,
         "total_cumulative_regret": float(hist_df["regret"].sum()) if len(hist_df) else np.nan,
-        "top_picks": hist_df["chosen_ISIN"].value_counts().head(15).rename_axis("ISIN").reset_index(name="times_chosen")
+        "top_picks": (
+            hist_df["chosen_ISIN"]
+            .value_counts()
+            .head(15)
+            .rename_axis("ISIN")
+            .reset_index(name="times_chosen")
+        ),
     }
     return hist_df, summary
+
 
 
 

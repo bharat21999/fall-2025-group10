@@ -5,13 +5,21 @@ import pandas as pd
 from pathlib import Path
 
 # ---------- Config ----------
-DATA_DIR = Path(os.getenv("FARTRANS_DATA_DIR", "/home/ubuntu/Capstone/src/Component/data/FAR-Trans"))
-OUT_DIR  = Path(os.getenv("CMAB_OUT_DIR", "/home/ubuntu/Capstone/src/Component/data/cmab"))
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+# Raw FAR-Trans CSVs
+DEFAULT_FARTRANS_DIR = PROJECT_ROOT / "src" / "Component" / "data" / "FAR-Trans"
+DATA_DIR = Path(os.getenv("FARTRANS_DATA_DIR", DEFAULT_FARTRANS_DIR))
+
+# CMAB parquet directory
+DEFAULT_CMAB_DIR = PROJECT_ROOT / "src" / "Component" / "data" / "cmab"
+OUT_DIR = Path(os.getenv("CMAB_OUT_DIR", DEFAULT_CMAB_DIR))
 OUT_DIR.mkdir(parents=True, exist_ok=True)
+
 
 HORIZON_DAYS = 7
 SNAP_WEEKDAY = 0   # Monday
-N_CUSTOMERS  = 1000
+N_CUSTOMERS  = 500
 RANDOM_STATE = 42
 
 # ---------- IO ----------
@@ -341,8 +349,8 @@ def build_cmab_dataset_minimal() -> Path:
         transactions,
         assets,
         min_coverage=1.0,
-        min_txn_count=None,
-        min_customers=None,
+        min_txn_count=50,
+        min_customers=20,
         ensure_diversity=False
     )
 
