@@ -55,14 +55,12 @@ git clone https://github.com/bharat21999/fall-2025-group10.git
 ### Prepare Raw Dataset, CMAB Dataset & Run LinUCB and other algorithms
 python src/main.py (USE_RISKLEVEL=true python main.py #when want to add customer risklevel as a feature)
 
-
+### Compare All Models
+python src/Comparison.py (#as you run this it will ask for y/n if you put USE_RISKLEVEL=true in main then put y else n)
 
 ### Run Exploratory Data Analysis (EDA)
 python src/EDA.py
 
-
-### Compare All Models
-python src/Comparison.py (#as you run this it will ask for y/n if you put USE_RISKLEVEL=true in main then put y else n)
 
 All results will appear in the results/ folder.
 
