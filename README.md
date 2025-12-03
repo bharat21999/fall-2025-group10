@@ -48,11 +48,8 @@ Evaluation is based on regret, reward trends, and stability.
 
 ## Installation
 
-### 1. Clone the Repository
+### Clone the Repository
 git clone https://github.com/bharat21999/fall-2025-group10.git
-
-### 2. Install Dependencies
-pip install -r requirements.txt
 
 ## Usage
 ### Prepare Raw Dataset, CMAB Dataset & Run LinUCB and other algorithms
