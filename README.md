@@ -80,7 +80,8 @@ Reusable modules for bandit experiments:
 - CF_Recommender.py – Item-item CF
 - random_recommender.py – Random baseline
 - add_risklevel_to_cmab.py – Risk-level augmentation
-- utils.py – Shared utilities
+- utils.py – Shared utilities(for changing configurations change n_customers at the top in utils.py and to change number of assets change min_txn_count=50,
+        min_customers=20 in [3/7]select_stable_asset function in main function of utils and put none for both if need all the assets having close prices at all timestamps )
 
 ### src/
 Main execution scripts:
