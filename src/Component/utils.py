@@ -20,7 +20,7 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 HORIZON_DAYS = 7
 SNAP_WEEKDAY = 0   # Monday
 N_CUSTOMERS  = 500
-RANDOM_STATE = 42
+RANDOM_STATE = None
 
 # ---------- IO ----------
 def load_csvs():
