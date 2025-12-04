@@ -349,8 +349,8 @@ def build_cmab_dataset_minimal() -> Path:
         transactions,
         assets,
         min_coverage=1.0,
-        min_txn_count=50,
-        min_customers=20,
+        min_txn_count=None,
+        min_customers=None,
         ensure_diversity=False
     )
 
